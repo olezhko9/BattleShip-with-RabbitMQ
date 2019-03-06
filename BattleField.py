@@ -1,5 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QAbstractItemView
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QColor
+
 
 class BattleField(QWidget):
 
@@ -26,7 +28,20 @@ class BattleField(QWidget):
         self.table.setHorizontalHeader(horizontal_header)
         self.table.setHorizontalHeaderLabels([c for c in "АБВГДЕЖЗИК"])
 
+        for r in range(10):
+            for c in range(10):
+                self.table.setItem(r, c, QTableWidgetItem())
+
+        self.table.setSelectionMode(QAbstractItemView.NoSelection)
+        self.table.cellClicked.connect(self.cell_selected)
+
         layout = QVBoxLayout()
         layout.addWidget(self.table)
         self.setLayout(layout)
+
+    @pyqtSlot()
+    def cell_selected(self):
+        item = self.table.currentItem()
+        print(item.row(), item.column())
+        item.setBackground(QColor(100, 100, 150))
 
