@@ -22,8 +22,8 @@ class BattleShip(QMainWindow):
         """
         Инициализация интерфейса
         """
-        self.myBattleField = BattleField()
-        self.enemyBattleField = BattleField()
+        self.myBattleField = BattleField(enemy_field=False)
+        self.enemyBattleField = BattleField(enemy_field=True)
 
         self.message_area = QLabel("Здесь будут выводиться сообщения игры.")
         battle_field_layout = QHBoxLayout()

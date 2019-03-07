@@ -13,8 +13,9 @@ class BattleField(QWidget):
     MISS_CELL = 4
     FREE_CELL = 5
 
-    def __init__(self):
+    def __init__(self, enemy_field=False):
         super(BattleField, self).__init__()
+        self.enemy_field = enemy_field
         self.state = []
         self.setup_UI()
 
@@ -63,10 +64,11 @@ class BattleField(QWidget):
             [0,0,0,0,1,0,0,0,0,0],
         ]
 
-        for y, line in enumerate(self.state):
-            for x, cell in enumerate(line):
-                if cell == 1:
-                    self.table.item(y, x).setBackground(QColor(100, 100, 150))
+        if not self.enemy_field:
+            for y, line in enumerate(self.state):
+                for x, cell in enumerate(line):
+                    if cell == 1:
+                        self.table.item(y, x).setBackground(QColor(100, 100, 150))
 
 
     @pyqtSlot()
@@ -74,6 +76,10 @@ class BattleField(QWidget):
         """
         Вызывается при нажатии на клетку игрового поля
         """
+        if self.enemy_field:
+            print("enemy")
+        else:
+            print("me")
         item = self.table.currentItem()
         print(item.row(), item.column())
 
