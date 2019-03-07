@@ -5,6 +5,7 @@ from PyQt5.QtGui import QColor
 
 class BattleField(QWidget):
 
+    # возможные состояния клеток
     EMPTY_CELL = 0
     SHIP_CELL = 1
     HIT_CELL = 2
@@ -18,6 +19,9 @@ class BattleField(QWidget):
         self.setup_UI()
 
     def setup_UI(self):
+        """
+        Инициализация интерфейса поля морского боя
+        """
         cell_size = 32
         self.table = QTableWidget()
         self.table.setColumnCount(10)
@@ -33,7 +37,7 @@ class BattleField(QWidget):
                 self.table.setItem(r, c, QTableWidgetItem())
 
         self.table.setSelectionMode(QAbstractItemView.NoSelection)
-        self.table.cellClicked.connect(self.cell_selected)
+        self.table.cellClicked.connect(self.cell_clicked)
 
         layout = QVBoxLayout()
         layout.addWidget(self.table)
@@ -42,6 +46,10 @@ class BattleField(QWidget):
         self.init_ships()
 
     def init_ships(self):
+        """
+        Случайная расстановка кораблей и их отрисовка
+        """
+        # TODO изменить способ инициализации кораблей
         self.state = [
             [0,1,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,1,1,1,1,0],
@@ -62,7 +70,10 @@ class BattleField(QWidget):
 
 
     @pyqtSlot()
-    def cell_selected(self):
+    def cell_clicked(self):
+        """
+        Вызывается при нажатии на клетку игрового поля
+        """
         item = self.table.currentItem()
         print(item.row(), item.column())
 

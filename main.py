@@ -4,10 +4,11 @@ import sys
 
 
 class BattleShip(QMainWindow):
-
+    """
+    Класс приложения, необходимый для инициализации интерфейса и запуска игры
+    """
     def __init__(self):
         super().__init__()
-
         self.title = 'Battle Ship'
         self.left = 600
         self.top = 400
@@ -18,11 +19,13 @@ class BattleShip(QMainWindow):
         self.setup_UI()
 
     def setup_UI(self):
+        """
+        Инициализация интерфейса
+        """
         self.myBattleField = BattleField()
         self.enemyBattleField = BattleField()
 
         self.message_area = QLabel("Здесь будут выводиться сообщения игры.")
-
         battle_field_layout = QHBoxLayout()
         battle_field_layout.addWidget(self.myBattleField)
         battle_field_layout.addWidget(self.enemyBattleField)
