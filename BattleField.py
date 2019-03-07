@@ -10,9 +10,8 @@ class BattleField(QWidget):
     EMPTY_CELL = 0
     SHIP_CELL = 1
     HIT_CELL = 2
-    DEAD_CELL = 3
-    MISS_CELL = 4
-    FREE_CELL = 5
+    MISS_CELL = 3
+    DEAD_CELL = 4
 
     FIELDS_NUM = 10
 
@@ -50,6 +49,22 @@ class BattleField(QWidget):
 
         self.init_ships()
 
+    def update_field_UI(self):
+        my_ship_color = QColor(100, 100, 150)
+        enemy_ship_color = QColor(100, 100, 150)
+        miss_color = QColor(170, 255, 255)
+
+        for x in range(self.FIELDS_NUM):
+            for y in range(self.FIELDS_NUM):
+                if self.enemy_field:
+                    if self.field[x][y] == self.HIT_CELL:
+                        self.table.item(x, y).setBackground(enemy_ship_color)
+                    elif self.field[x][y] == self.MISS_CELL:
+                        self.table.item(x, y).setBackground(miss_color)
+                else:
+                    if self.field[x][y] == self.SHIP_CELL:
+                        self.table.item(x, y).setBackground(my_ship_color)
+
     def init_ships(self):
         """
         Случайная расстановка кораблей и их отрисовка
@@ -72,12 +87,7 @@ class BattleField(QWidget):
                     valid = self.is_valid_position(random_x, random_y, o, ship[1])
                 self.place_ship(random_x, random_y, o, ship[1])
 
-        # отрисовываем корабли, если они находятся на нашем поле
-        if not self.enemy_field:
-            for y, line in enumerate(self.field):
-                for x, cell in enumerate(line):
-                    if cell == self.SHIP_CELL:
-                        self.table.item(y, x).setBackground(QColor(100, 100, 150))
+        self.update_field_UI()
 
     def is_valid_position(self, start_x, start_y, orientation, length):
         """
@@ -134,7 +144,24 @@ class BattleField(QWidget):
                 if self.field[x][y] == value:
                     count += 1
         return count
-    
+
+    def change_field_after_shot(self, row, col):
+        """
+        Обработчик выстрелов по координатам (row, col)
+        :return: Вернет True, если выстрел зафиксирован, иначе False.
+        """
+        # если выстрел в пустую клетку, то фиксируем промах
+        if self.field[row][col] == self.EMPTY_CELL:
+            self.field[row][col] = self.MISS_CELL
+        # если выстрел в корабль, то фиксируем попадание
+        elif self.field[row][col] == self.SHIP_CELL:
+            self.field[row][col] = self.HIT_CELL
+        # если координаты выстрела повторились, то ничего не менятеся
+        else:
+            return False
+
+        return True
+
     @pyqtSlot()
     def cell_clicked(self):
         """
@@ -142,15 +169,11 @@ class BattleField(QWidget):
         """
         item = self.table.currentItem()
         if self.enemy_field:
-            print("enemy")
             row = item.row()
             col = item.column()
-            if self.field[row][col] == self.SHIP_CELL:
-                item.setBackground(QColor(150, 100, 150))
-            elif self.field[row][col] == self.EMPTY_CELL:
-                item.setBackground(QColor(170, 255, 255))
-            # print(item.row(), item.column())
-            print(self.count_if(self.SHIP_CELL))
+            if self.change_field_after_shot(row, col):
+                self.update_field_UI()
+                print(row, col)
         else:
-            print("me")
+            pass
 
