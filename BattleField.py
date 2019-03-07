@@ -39,9 +39,30 @@ class BattleField(QWidget):
         layout.addWidget(self.table)
         self.setLayout(layout)
 
+        self.init_ships()
+
+    def init_ships(self):
+        self.state = [
+            [0,1,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,1,1,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,1],
+            [0,0,0,1,0,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,1,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [1,1,0,0,0,0,0,1,1,1],
+            [0,0,0,0,1,0,0,0,0,0],
+        ]
+
+        for y, line in enumerate(self.state):
+            for x, cell in enumerate(line):
+                if cell == 1:
+                    self.table.item(y, x).setBackground(QColor(100, 100, 150))
+
+
     @pyqtSlot()
     def cell_selected(self):
         item = self.table.currentItem()
         print(item.row(), item.column())
-        item.setBackground(QColor(100, 100, 150))
 

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel
 from BattleField import BattleField
 import sys
 
@@ -11,17 +11,26 @@ class BattleShip(QMainWindow):
         self.title = 'Battle Ship'
         self.left = 600
         self.top = 400
-        self.width = 900
-        self.height = 600
+        self.width = 808
+        self.height = 380
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setup_UI()
 
     def setup_UI(self):
-        self.battleField = BattleField()
+        self.myBattleField = BattleField()
+        self.enemyBattleField = BattleField()
 
-        main_layout = QHBoxLayout()
-        main_layout.addWidget(self.battleField)
+        self.message_area = QLabel("Здесь будут выводиться сообщения игры.")
+
+        battle_field_layout = QHBoxLayout()
+        battle_field_layout.addWidget(self.myBattleField)
+        battle_field_layout.addWidget(self.enemyBattleField)
+
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(battle_field_layout)
+        main_layout.addWidget(self.message_area)
+
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(main_layout)
 
