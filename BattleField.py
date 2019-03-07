@@ -19,7 +19,7 @@ class BattleField(QWidget):
     def __init__(self, enemy_field=False):
         super(BattleField, self).__init__()
         self.enemy_field = enemy_field
-        self.fleet = []
+        self.field = []
         self.setup_UI()
 
     def setup_UI(self):
@@ -55,7 +55,7 @@ class BattleField(QWidget):
         Случайная расстановка кораблей и их отрисовка
         """
         # Изначально поле битвы пустое
-        self.fleet = [[0] * self.FIELDS_NUM for i in range(self.FIELDS_NUM)]
+        self.field = [[0] * self.FIELDS_NUM for i in range(self.FIELDS_NUM)]
 
         # Флот кораблей. 1 четырехпалубный, 2 трехпалубных, ...
         ship_fleet = [(1, 4), (2, 3), (3, 2), (4, 1)]
@@ -74,7 +74,7 @@ class BattleField(QWidget):
 
         # отрисовываем корабли, если они находятся на нашем поле
         if not self.enemy_field:
-            for y, line in enumerate(self.fleet):
+            for y, line in enumerate(self.field):
                 for x, cell in enumerate(line):
                     if cell == self.SHIP_CELL:
                         self.table.item(y, x).setBackground(QColor(100, 100, 150))
@@ -102,7 +102,7 @@ class BattleField(QWidget):
 
         for x in range(start_x, end_x + 1):
             for y in range(start_y, end_y + 1):
-                if self.fleet[x][y] == self.SHIP_CELL:
+                if self.field[x][y] == self.SHIP_CELL:
                     return False
         return True
 
@@ -122,9 +122,19 @@ class BattleField(QWidget):
         # сохраняем информацию о корабле в матрицу расположения флота
         for x in range(start_x, end_x):
             for y in range(start_y, end_y):
-                self.fleet[x][y] = self.SHIP_CELL
+                self.field[x][y] = self.SHIP_CELL
 
-
+    def count_if(self, value):
+        """
+        :return: Возвращает количество ячеекЮ значение в которых равно value.
+        """
+        count = 0
+        for x in range(self.FIELDS_NUM):
+            for y in range(self.FIELDS_NUM):
+                if self.field[x][y] == value:
+                    count += 1
+        return count
+    
     @pyqtSlot()
     def cell_clicked(self):
         """
@@ -135,11 +145,12 @@ class BattleField(QWidget):
             print("enemy")
             row = item.row()
             col = item.column()
-            if self.fleet[row][col] == self.SHIP_CELL:
+            if self.field[row][col] == self.SHIP_CELL:
                 item.setBackground(QColor(150, 100, 150))
-            elif self.fleet[row][col] == self.EMPTY_CELL:
+            elif self.field[row][col] == self.EMPTY_CELL:
                 item.setBackground(QColor(170, 255, 255))
-            print(item.row(), item.column())
+            # print(item.row(), item.column())
+            print(self.count_if(self.SHIP_CELL))
         else:
             print("me")
 
