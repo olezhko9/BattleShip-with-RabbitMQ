@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QAbstractItemView
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from random import randint, choice
 from Ship import Ship
@@ -41,7 +41,6 @@ class BattleField(QWidget):
 
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionMode(QAbstractItemView.NoSelection)
-        self.table.cellClicked.connect(self.cell_clicked)
 
         layout = QVBoxLayout()
         layout.addWidget(self.table)
@@ -52,18 +51,25 @@ class BattleField(QWidget):
     def update_field_UI(self):
         my_ship_color = QColor(100, 100, 150)
         enemy_ship_color = QColor(100, 100, 150)
-        miss_color = QColor(170, 255, 255)
+        miss_color = QColor(226, 225, 235)
+        hit_color = QColor(214, 178, 130)
 
         for x in range(self.FIELDS_NUM):
             for y in range(self.FIELDS_NUM):
-                if self.enemy_field:
-                    if self.field[x][y] == self.HIT_CELL:
-                        self.table.item(x, y).setBackground(enemy_ship_color)
-                    elif self.field[x][y] == self.MISS_CELL:
-                        self.table.item(x, y).setBackground(miss_color)
-                else:
-                    if self.field[x][y] == self.SHIP_CELL:
-                        self.table.item(x, y).setBackground(my_ship_color)
+                if self.field[x][y] == self.HIT_CELL:
+                    self.table.item(x, y).setBackground(hit_color)
+                elif self.field[x][y] == self.MISS_CELL:
+                    self.table.item(x, y).setBackground(miss_color)
+                if self.field[x][y] == self.SHIP_CELL:
+                    if self.enemy_field:
+                        pass
+                        # if self.field[x][y] == self.HIT_CELL:
+                        #     self.table.item(x, y).setBackground(enemy_ship_color)
+                        # elif self.field[x][y] == self.MISS_CELL:
+                        #     self.table.item(x, y).setBackground(miss_color)
+                    else:
+                        if self.field[x][y] == self.SHIP_CELL:
+                            self.table.item(x, y).setBackground(my_ship_color)
 
     def init_ships(self):
         """
@@ -160,20 +166,5 @@ class BattleField(QWidget):
         else:
             return False
 
+        self.update_field_UI()
         return True
-
-    @pyqtSlot()
-    def cell_clicked(self):
-        """
-        Вызывается при нажатии на клетку игрового поля. Если клик на вражеском поле, то обрабатываем.
-        """
-        item = self.table.currentItem()
-        if self.enemy_field:
-            row = item.row()
-            col = item.column()
-            if self.change_field_after_shot(row, col):
-                self.update_field_UI()
-                print(row, col)
-        else:
-            pass
-
