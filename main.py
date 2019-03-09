@@ -49,6 +49,7 @@ class BattleShip(QMainWindow):
         """
         Глаавный игровой цикл
         """
+        self.game_over = False
         # Инициализируем игроков
         self.battle_bot = BotPlayer(self.myBattleField)
         self.real_player = RealPlayer(self.enemyBattleField)
@@ -70,6 +71,16 @@ class BattleShip(QMainWindow):
             BattleShipPlayer.next_player(self.real_player, self.battle_bot)
             self.battle_bot.shot()
         self.message_area.setText("Очередь - моя: {}, противника: {}".format(self.real_player.my_shot, self.battle_bot.my_shot))
+        self.is_game_over()
+
+    def is_game_over(self):
+        max_hits = 20
+        # если 20 клеток помечены, как попадание, то все корабли потоплены
+        if self.myBattleField.count_if(BattleField.HIT_CELL) == max_hits or \
+                self.enemyBattleField.count_if(BattleField.HIT_CELL) == max_hits:
+            self.game_over = True
+            print("Game over")
+            self.message_area.setText("Игра окончена!")
 
 
 if __name__ == "__main__":
