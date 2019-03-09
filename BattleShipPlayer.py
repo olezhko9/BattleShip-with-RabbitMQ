@@ -1,13 +1,11 @@
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
 from BattleField import BattleField
-from random import randint
-
+from BattleShipClient import BattleShipClient
 
 class BattleShipPlayer(QObject):
     """
     Базовый класс для игроков, сражающихся друг против друга
     """
-    shooted = pyqtSignal()
 
     def __init__(self, enemy: BattleField):
         """
@@ -23,7 +21,7 @@ class BattleShipPlayer(QObject):
         # смотрим, попал ли выстрел в цель
         self.last_hit_success = self.enemy.field[x][y] == BattleField.HIT_CELL
         # оповещаем о выстреле
-        self.shooted.emit()
+        self.enemy.shooted.emit()
         # TODO: отправка данных о выстреле на сервер
 
     def is_valid_shot(self, x, y):
@@ -39,10 +37,10 @@ class BattleShipPlayer(QObject):
 
 
 
-class RealPlayer(BattleShipPlayer):
+class LocalPlayer(BattleShipPlayer):
 
     def __init__(self, enemy):
-        super(RealPlayer, self).__init__(enemy)
+        super(LocalPlayer, self).__init__(enemy)
         self.enemy.table.cellClicked.connect(self.shot)
 
     def shot(self, *args):
@@ -58,10 +56,14 @@ class RealPlayer(BattleShipPlayer):
 
 
 
-class BotPlayer(BattleShipPlayer):
+class RemotePlayer(BattleShipPlayer):
     """
     Бот, играющий в морской бой против соперника, указанного в конструкторе.
     """
+
+    def __init__(self, enemy):
+        super(RemotePlayer, self).__init__(enemy)
+        self.client = BattleShipClient()
 
     def shot(self, *args):
         """
@@ -70,8 +72,10 @@ class BotPlayer(BattleShipPlayer):
         """
         if self.my_shot:
             while True:
-                x = randint(0, self.enemy.FIELDS_NUM - 1)
-                y = randint(0, self.enemy.FIELDS_NUM - 1)
+                response = self.client.call("shot")
+                response = str(response)[3:-2].split(', ')
+                x = int(response[0])
+                y = int(response[1])
                 if self.is_valid_shot(x, y):
                     print("Бот выстрелил по", x, y)
                     super().shot(x, y)

@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVB
 from PyQt5.QtGui import QFont
 import sys
 from BattleField import BattleField
-from BattleShipPlayer import RealPlayer, BotPlayer, BattleShipPlayer
+from BattleShipPlayer import LocalPlayer, RemotePlayer, BattleShipPlayer
 
 
 class BattleShip(QMainWindow):
@@ -51,13 +51,13 @@ class BattleShip(QMainWindow):
         """
         self.game_over = False
         # Инициализируем игроков
-        self.battle_bot = BotPlayer(self.myBattleField)
-        self.real_player = RealPlayer(self.enemyBattleField)
+        self.real_player = LocalPlayer(self.enemyBattleField)
+        self.battle_bot = RemotePlayer(self.myBattleField)
         # Первый ход всегда наш
         self.real_player.my_shot = True
         # Каждый игрок обрабатывает выстрелы
-        self.real_player.shooted.connect(self.on_shot)
-        self.battle_bot.shooted.connect(self.on_shot)
+        self.enemyBattleField.shooted.connect(self.on_shot)
+        self.myBattleField.shooted.connect(self.on_shot)
 
     def on_shot(self):
         """

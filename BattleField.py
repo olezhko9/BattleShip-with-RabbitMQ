@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QAbstractItemView
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
 from random import randint, choice
 from Ship import Ship
@@ -14,6 +14,8 @@ class BattleField(QWidget):
     DEAD_CELL = 4
 
     FIELDS_NUM = 10
+
+    shooted = pyqtSignal()
 
     def __init__(self, enemy_field=False):
         super(BattleField, self).__init__()
@@ -63,10 +65,6 @@ class BattleField(QWidget):
                 if self.field[x][y] == self.SHIP_CELL:
                     if self.enemy_field:
                         pass
-                        # if self.field[x][y] == self.HIT_CELL:
-                        #     self.table.item(x, y).setBackground(enemy_ship_color)
-                        # elif self.field[x][y] == self.MISS_CELL:
-                        #     self.table.item(x, y).setBackground(miss_color)
                     else:
                         if self.field[x][y] == self.SHIP_CELL:
                             self.table.item(x, y).setBackground(my_ship_color)
