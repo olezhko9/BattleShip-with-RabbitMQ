@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVB
 from PyQt5.QtGui import QFont
 import sys
 from BattleField import BattleField
-from BattleShipPlayer import LocalPlayer, RemotePlayer, BattleShipPlayer
+from Player import Player
 
 
 class BattleShip(QMainWindow):
@@ -31,7 +31,7 @@ class BattleShip(QMainWindow):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        self.message_area = QLabel("Ваш ход!")
+        self.message_area = QLabel("Игра начинается!")
         self.message_area.setFont(QFont("Times", 14, QFont.Normal))
 
         battle_field_layout = QHBoxLayout()
@@ -51,26 +51,33 @@ class BattleShip(QMainWindow):
         """
         self.game_over = False
         # Инициализируем игроков
-        self.real_player = LocalPlayer(self.enemyBattleField)
-        self.battle_bot = RemotePlayer(self.myBattleField)
+        self.player = Player(self.enemyBattleField)
+        # self.real_player = LocalPlayer(self.enemyBattleField)
+        # self.battle_bot = RemotePlayer(self.myBattleField)
         # Первый ход всегда наш
-        self.real_player.my_shot = True
+        # self.player.my_shot = True
         # Каждый игрок обрабатывает выстрелы
         self.enemyBattleField.shooted.connect(self.on_shot)
         self.myBattleField.shooted.connect(self.on_shot)
+
+        if self.player.my_shot:
+            self.message_area.setText("Ваш ход!")
+        else:
+            self.message_area.setText("Ход противника")
+
 
     def on_shot(self):
         """
         Функция вызывается после выстрела одного из игроков
         """
         # если бот попал, то пусть стреляет еще раз
-        if self.battle_bot.last_hit_success:
-            self.battle_bot.shot()
-        # если мы промахнулись, то ход переходит боту
-        elif not self.real_player.last_hit_success:
-            BattleShipPlayer.next_player(self.real_player, self.battle_bot)
-            self.battle_bot.shot()
-        self.message_area.setText("Очередь - моя: {}, противника: {}".format(self.real_player.my_shot, self.battle_bot.my_shot))
+        # if self.battle_bot.last_hit_success:
+        #     self.battle_bot.shot()
+        # # если мы промахнулись, то ход переходит боту
+        # elif not self.real_player.last_hit_success:
+        #     BattleShipPlayer.next_player(self.real_player, self.battle_bot)
+        #     self.battle_bot.shot()
+        # self.message_area.setText("Очередь - моя: {}, противника: {}".format(self.real_player.my_shot, self.battle_bot.my_shot))
         self.is_game_over()
 
     def is_game_over(self):

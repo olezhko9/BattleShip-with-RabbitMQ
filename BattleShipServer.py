@@ -1,8 +1,5 @@
-# RabbitMQ
-# 1. Скачать RabbitMQ - https://www.rabbitmq.com/install-windows.html
-# 2. pip install pika
 import pika
-from random import randint
+import json
 
 # подключились к брокеру сообщений
 connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
@@ -10,31 +7,62 @@ channel = connection.channel()
 # создаем очередь
 channel.queue_declare(queue='battle_ship_queue')
 
+clients = []
 
-def generate_shot():
-    x = randint(0, 10 - 1)
-    y = randint(0, 10 - 1)
-    return x, y
+class Client:
+    def __init__(self, queue_name, corr_id):
+        self.queue_name = queue_name
+        self.enemy_queue_name = None
+        self.last_msg_corr_id = corr_id
 
+    def set_enemy(self, enemy):
+        self.enemy_queue_name = enemy.queue_name
 
 def on_request(ch, method, props, body):
-    response = None
-    print(body)
-    if body.decode("utf-8") == "shot":
-        response = generate_shot()
+    # переводим байты в словарь
+    request = json.loads(body.decode("utf-8"))
+    action = request.get('action')
+    print(request)
+    if action == 'find_enemy':
+        client = Client(props.reply_to, props.correlation_id)
+        clients.append(client)
+        # [print(c.queue_name) for c in clients]
+        if len(clients) % 2 == 0:
+            clients[-1].set_enemy(clients[-2])
+            clients[-2].set_enemy(clients[-1])
+            first = True
+            for c in clients[-2:]:
+                print('send from {} to {}'.format(c.queue_name, c.enemy_queue_name))
+                response = json.dumps({
+                    'enemy_queue': c.enemy_queue_name,
+                    'first_hit': first,
+                })
+                first = not first
+                ch.basic_publish(exchange='',
+                                 routing_key=c.queue_name,
+                                 properties=pika.BasicProperties(correlation_id=c.last_msg_corr_id),
+                                 body=response)
+    elif action == 'shot':
+        for client in clients:
+            if client.queue_name == props.reply_to:
+                client.last_msg_corr_id = props.correlation_id
+                ch.basic_publish(exchange='',
+                                 routing_key=client.enemy_queue_name,
+                                 properties=pika.BasicProperties(correlation_id=client.last_msg_corr_id),
+                                 body=body)
 
-    print("Выстрелил по:", response)
-    ch.basic_publish(exchange='',
-                     routing_key=props.reply_to,
-                     properties=pika.BasicProperties(correlation_id=props.correlation_id),
-                     body=str(response))
+    # response = None
+
+    # ch.basic_publish(exchange='',
+    #                  routing_key=props.reply_to,
+    #                  properties=pika.BasicProperties(correlation_id=props.correlation_id),
+    #                  body=str(response))
+
     # подтверждение сообщений
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-# не отдавать подписчику единовременно более одного сообщения
-channel.basic_qos(prefetch_count=1)
-# Получение сообщений
-channel.basic_consume(on_request, queue='battle_ship_queue')
+
+channel.basic_consume(consumer_callback=on_request, queue='battle_ship_queue')
 
 print(" [x] Awaiting RPC requests")
 channel.start_consuming()

@@ -78,18 +78,18 @@ class BattleField(QWidget):
 
         # Флот кораблей. 1 четырехпалубный, 2 трехпалубных, ...
         ship_fleet = [(1, 4), (2, 3), (3, 2), (4, 1)]
-
-        # записываем корабли в матрицу расположения флота
-        for ship in ship_fleet:
-            for ship_count in range(ship[0]):
-                valid = False
-                random_x, random_y = -1, -1
-                o = choice([Ship.H_ORIENTATION, Ship.V_ORIENTATION])
-                while not valid:
-                    random_x = randint(0, self.FIELDS_NUM - 1)
-                    random_y = randint(0, self.FIELDS_NUM - 1)
-                    valid = self.is_valid_position(random_x, random_y, o, ship[1])
-                self.place_ship(random_x, random_y, o, ship[1])
+        if not self.enemy_field:
+            # записываем корабли в матрицу расположения флота
+            for ship in ship_fleet:
+                for ship_count in range(ship[0]):
+                    valid = False
+                    random_x, random_y = -1, -1
+                    o = choice([Ship.H_ORIENTATION, Ship.V_ORIENTATION])
+                    while not valid:
+                        random_x = randint(0, self.FIELDS_NUM - 1)
+                        random_y = randint(0, self.FIELDS_NUM - 1)
+                        valid = self.is_valid_position(random_x, random_y, o, ship[1])
+                    self.place_ship(random_x, random_y, o, ship[1])
 
         self.update_field_UI()
 
