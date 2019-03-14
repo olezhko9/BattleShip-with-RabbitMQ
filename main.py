@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtGui import QFont
 import sys
 from BattleField import BattleField
@@ -33,10 +33,12 @@ class BattleShip(QMainWindow):
 
         self.message_area = QLabel("Игра начинается!")
         self.message_area.setFont(QFont("Times", 14, QFont.Normal))
+        self.start_button = QPushButton('Старт')
 
         battle_field_layout = QHBoxLayout()
         battle_field_layout.addWidget(self.myBattleField)
         battle_field_layout.addWidget(self.enemyBattleField)
+        battle_field_layout.addWidget(self.start_button)
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(battle_field_layout)
@@ -44,6 +46,7 @@ class BattleShip(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(main_layout)
+        self.show()
 
     def battle_loop(self):
         """
@@ -52,10 +55,8 @@ class BattleShip(QMainWindow):
         self.game_over = False
         # Инициализируем игроков
         self.player = Player(self.enemyBattleField)
-        # self.real_player = LocalPlayer(self.enemyBattleField)
-        # self.battle_bot = RemotePlayer(self.myBattleField)
-        # Первый ход всегда наш
-        # self.player.my_shot = True
+        self.start_button.clicked.connect(self.player.find_enemy)
+
         # Каждый игрок обрабатывает выстрелы
         self.enemyBattleField.shooted.connect(self.on_shot)
         self.myBattleField.shooted.connect(self.on_shot)
@@ -78,6 +79,7 @@ class BattleShip(QMainWindow):
         #     BattleShipPlayer.next_player(self.real_player, self.battle_bot)
         #     self.battle_bot.shot()
         # self.message_area.setText("Очередь - моя: {}, противника: {}".format(self.real_player.my_shot, self.battle_bot.my_shot))
+
         self.is_game_over()
 
     def is_game_over(self):
@@ -93,5 +95,5 @@ class BattleShip(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = BattleShip()
-    window.show()
+    # window.show()
     sys.exit(app.exec_())
