@@ -6,8 +6,8 @@ import random
 
 class BattleShipClient(QObject):
 
-    # shot_status_signal = pyqtSignal()
-    make_shot_signal = pyqtSignal()
+    shot_status_signal = pyqtSignal(bool)
+    make_shot_signal = pyqtSignal(int, int)
 
     def __init__(self):
         super().__init__()
@@ -28,7 +28,7 @@ class BattleShipClient(QObject):
         if self.corr_id == props.correlation_id:
             self.response = self._load_from_json(body)
             self.enemy_id = self.response.get('enemy_queue')
-            self.my_shot = self.response.get('first_hit')
+            # self.my_shot = self.response.get('first_hit')
             print('Ответ от сервера:', self.response)
         # сообщение от другого клиента
         else:
@@ -39,20 +39,21 @@ class BattleShipClient(QObject):
             # обрабатываем выстрел противника
             if self.response.get('action') == 'shot':
                 # отправляем результат
-                self.shot_status()
-                self.make_shot_signal.emit()
-                
+                coord = self.response.get('hit')
+                self.make_shot_signal.emit(*coord)
                 # делаем свой выстред
                 # self.send_shot()
                 # self.wait_shot()
 
             # узнаем рещультат выстрела
             elif self.response.get('action') == 'status':
-                if self.response.get('status') == 0:
-                    print('Мимо')
-                else:
+                self.shot_status_signal.emit(self.response.get('status'))
+                if self.response.get('status'):
                     print('Попал')
-                self.response = None
+                else:
+                    print('Мимо')
+                    self.response = None
+
 
     def _call(self, request, queue='battle_ship_queue'):
         self.corr_id = str(uuid.uuid4())
@@ -81,13 +82,15 @@ class BattleShipClient(QObject):
         self.wait_shot()
 
 
-    def shot_status(self):
+    def send_shot_status(self, is_hit):
         print('Отправляю результат')
         status = {
             'action': 'status',
-            'status': random.randint(0, 9) % random.randint(1, 9) == 0,
+            'status': is_hit,
         }
         self._call(status, self.enemy_id)
+        if is_hit:
+            self.response = None
 
     def find_enemy(self):
         self._call({

@@ -54,7 +54,7 @@ class BattleShip(QMainWindow):
         """
         self.game_over = False
         # Инициализируем игроков
-        self.player = Player(self.enemyBattleField)
+        self.player = Player(self.myBattleField, self.enemyBattleField)
         self.start_button.clicked.connect(self.player.find_enemy)
 
         # Каждый игрок обрабатывает выстрелы
@@ -95,5 +95,4 @@ class BattleShip(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = BattleShip()
-    # window.show()
     sys.exit(app.exec_())

@@ -2,16 +2,18 @@ from BattleField import BattleField
 from client import BattleShipClient
 
 class Player:
-    def __init__(self, enemy_filed):
+    def __init__(self, player_field: BattleField, enemy_filed):
         self.my_shot = False
         self.last_hit_success = False
         self.enemy_queue = None
 
         self.enemy_filed = enemy_filed
+        self.player_field = player_field
         self.client = BattleShipClient()
 
         self.enemy_filed.table.cellClicked.connect(self.shot)
         self.client.make_shot_signal.connect(self._on_other_player_shot)
+        self.client.shot_status_signal.connect(self._on_shot_status)
 
     def find_enemy(self):
         """
@@ -25,6 +27,7 @@ class Player:
             self.client.wait_shot()
 
     def shot(self):
+        print('my shot:', self.my_shot)
         """
         Вызывается при нажатии на клетку игрового поля.
         Если ход игрока, то проверяет выбранну клетку на допустимость выстрела.
@@ -36,16 +39,23 @@ class Player:
             y = item.column()
             if self.is_valid_shot(x, y):
                 print("Человек выстрелил по", x, y)
-                self.my_shot = not self.my_shot
                 self.client.send_shot(x, y)
                 # self.enemy_filed.shooted.emit()
                 # self.enemy_filed.change_field_after_shot(x, y)
 
-    def _on_other_player_shot(self):
+    def _on_other_player_shot(self, x, y):
         # меняем очередь хода
-        self.my_shot = not self.my_shot
+        is_hit = self.player_field.field[x][y] == BattleField.SHIP_CELL
+        self.client.send_shot_status(is_hit)
+        if not is_hit:
+            self.my_shot = not self.my_shot
+
+    def _on_shot_status(self, is_hit):
+        if not is_hit:
+            self.my_shot = not self.my_shot
 
     def is_valid_shot(self, x, y):
+        # TODO: проверка в классе BattleField
         """
         Вернет True, если клетка не содержит корабля и ранее не была обстрелена
         """
