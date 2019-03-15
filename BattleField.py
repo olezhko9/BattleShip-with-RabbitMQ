@@ -166,3 +166,9 @@ class BattleField(QWidget):
 
         self.update_field_UI()
         return True
+
+    def is_valid_shot(self, x, y):
+        """
+        :return: Вернет True, если клетка не содержит корабля и ранее не была обстрелена
+        """
+        return self.field[x][y] == self.EMPTY_CELL

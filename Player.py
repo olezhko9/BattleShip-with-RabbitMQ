@@ -37,7 +37,7 @@ class Player:
             item = self.enemy_filed.table.currentItem()
             x = item.row()
             y = item.column()
-            if self.is_valid_shot(x, y):
+            if self.enemy_filed.is_valid_shot(x, y):
                 print("Человек выстрелил по", x, y)
                 self.client.send_shot(x, y)
                 # self.enemy_filed.shooted.emit()
@@ -53,11 +53,3 @@ class Player:
     def _on_shot_status(self, is_hit):
         if not is_hit:
             self.my_shot = not self.my_shot
-
-    def is_valid_shot(self, x, y):
-        # TODO: проверка в классе BattleField
-        """
-        Вернет True, если клетка не содержит корабля и ранее не была обстрелена
-        """
-        return self.enemy_filed.field[x][y] == BattleField.EMPTY_CELL
-        # return self.enemy_filed.change_field_after_shot(x, y)
