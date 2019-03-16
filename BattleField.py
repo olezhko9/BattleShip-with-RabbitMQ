@@ -4,6 +4,7 @@ from PyQt5.QtGui import QColor
 from random import randint, choice
 from Ship import Ship
 
+
 class BattleField(QWidget):
 
     # возможные состояния клеток
@@ -149,23 +150,16 @@ class BattleField(QWidget):
                     count += 1
         return count
 
-    def change_field_after_shot(self, row, col):
+    def change_field_after_shot(self, row, col, is_hit):
         """
         Обработчик выстрелов по координатам (row, col)
-        :return: Вернет True, если выстрел зафиксирован, иначе False.
         """
-        # если выстрел в пустую клетку, то фиксируем промах
-        if self.field[row][col] == self.EMPTY_CELL:
-            self.field[row][col] = self.MISS_CELL
-        # если выстрел в корабль, то фиксируем попадание
-        elif self.field[row][col] == self.SHIP_CELL:
+        if is_hit:
             self.field[row][col] = self.HIT_CELL
-        # если координаты выстрела повторились, то ничего не менятеся
         else:
-            return False
+            self.field[row][col] = self.MISS_CELL
 
         self.update_field_UI()
-        return True
 
     def is_valid_shot(self, x, y):
         """

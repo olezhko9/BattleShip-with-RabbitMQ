@@ -4,8 +4,8 @@ import uuid
 import json
 import random
 
-class BattleShipClient(QObject):
 
+class BattleShipClient(QObject):
     shot_status_signal = pyqtSignal(bool)
     make_shot_signal = pyqtSignal(int, int)
 
@@ -28,7 +28,6 @@ class BattleShipClient(QObject):
         if self.corr_id == props.correlation_id:
             self.response = self._load_from_json(body)
             self.enemy_id = self.response.get('enemy_queue')
-            # self.my_shot = self.response.get('first_hit')
             print('Ответ от сервера:', self.response)
         # сообщение от другого клиента
         else:
@@ -47,13 +46,12 @@ class BattleShipClient(QObject):
 
             # узнаем рещультат выстрела
             elif self.response.get('action') == 'status':
-                self.shot_status_signal.emit(self.response.get('status'))
-                if self.response.get('status'):
+                shot_status = self.response.get('status')
+                self.shot_status_signal.emit(shot_status)
+                if shot_status:
                     print('Попал')
                 else:
                     print('Мимо')
-                    self.response = None
-
 
     def _call(self, request, queue='battle_ship_queue'):
         self.corr_id = str(uuid.uuid4())
@@ -71,7 +69,6 @@ class BattleShipClient(QObject):
 
         return self.response
 
-
     def send_shot(self, x, y):
         print('Стреляю по врагу')
         shot = {
@@ -80,7 +77,6 @@ class BattleShipClient(QObject):
         }
         self._call(shot, self.enemy_id)
         self.wait_shot()
-
 
     def send_shot_status(self, is_hit):
         print('Отправляю результат')

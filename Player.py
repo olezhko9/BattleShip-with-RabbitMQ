@@ -1,11 +1,14 @@
 from BattleField import BattleField
 from client import BattleShipClient
+from PyQt5.QtCore import QTimer
+
 
 class Player:
     def __init__(self, player_field: BattleField, enemy_filed):
         self.my_shot = False
         self.last_hit_success = False
         self.enemy_queue = None
+        self.last_shot = -1, -1
 
         self.enemy_filed = enemy_filed
         self.player_field = player_field
@@ -38,18 +41,32 @@ class Player:
             x = item.row()
             y = item.column()
             if self.enemy_filed.is_valid_shot(x, y):
+                self.last_shot = x, y
                 print("Человек выстрелил по", x, y)
                 self.client.send_shot(x, y)
-                # self.enemy_filed.shooted.emit()
-                # self.enemy_filed.change_field_after_shot(x, y)
 
     def _on_other_player_shot(self, x, y):
-        # меняем очередь хода
+        """
+        Вызывается при получении данных о выстреле соперника.
+        Отправляет информацию о попадании или промахе сопернику.
+        :param x, y: координаты выстрела соперника
+        """
         is_hit = self.player_field.field[x][y] == BattleField.SHIP_CELL
         self.client.send_shot_status(is_hit)
+        # если противник промахнулся, то ход переходит к нам
         if not is_hit:
             self.my_shot = not self.my_shot
 
     def _on_shot_status(self, is_hit):
+        """
+        Вызывается при получении информации от соперника о промахе или попадании.
+        """
+        self.enemy_filed.change_field_after_shot(*self.last_shot, is_hit)
+        # если мы про махнулись, то мы не можем ходить, пока противник не промахнется
         if not is_hit:
             self.my_shot = not self.my_shot
+            # нужно некотрое время, чтобы обновить игровое поле перед тем как снова начать слушать очередь
+            self.shot_process_timer = QTimer()
+            self.shot_process_timer.setSingleShot(True)
+            self.shot_process_timer.timeout.connect(self.client.wait_shot)
+            self.shot_process_timer.start(500)
