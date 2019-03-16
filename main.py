@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSlot
 import sys
 from BattleField import BattleField
 from Player import Player
@@ -26,7 +27,7 @@ class BattleShip(QMainWindow):
         self.title = 'Battle Ship'
         self.left = 600
         self.top = 400
-        self.width = 808
+        self.width = 890
         self.height = 390
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
@@ -53,32 +54,20 @@ class BattleShip(QMainWindow):
         Глаавный игровой цикл
         """
         self.game_over = False
-        # Инициализируем игроков
+
         self.player = Player(self.myBattleField, self.enemyBattleField)
+        self.player.shot_status_changed.connect(self.on_shot_status_changed)
         self.start_button.clicked.connect(self.player.find_enemy)
 
-        # Каждый игрок обрабатывает выстрелы
-        self.enemyBattleField.shooted.connect(self.on_shot)
-        self.myBattleField.shooted.connect(self.on_shot)
-
-        if self.player.my_shot:
-            self.message_area.setText("Ваш ход!")
-        else:
-            self.message_area.setText("Ход противника")
-
-
-    def on_shot(self):
+    @pyqtSlot(bool)
+    def on_shot_status_changed(self, my_shot):
         """
         Функция вызывается после выстрела одного из игроков
         """
-        # если бот попал, то пусть стреляет еще раз
-        # if self.battle_bot.last_hit_success:
-        #     self.battle_bot.shot()
-        # # если мы промахнулись, то ход переходит боту
-        # elif not self.real_player.last_hit_success:
-        #     BattleShipPlayer.next_player(self.real_player, self.battle_bot)
-        #     self.battle_bot.shot()
-        # self.message_area.setText("Очередь - моя: {}, противника: {}".format(self.real_player.my_shot, self.battle_bot.my_shot))
+        if my_shot:
+            self.message_area.setText("Ваш ход!")
+        else:
+            self.message_area.setText("Ход противника")
 
         self.is_game_over()
 

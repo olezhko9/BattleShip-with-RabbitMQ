@@ -1,10 +1,14 @@
 from BattleField import BattleField
 from client import BattleShipClient
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 
 
-class Player:
+class Player(QObject):
+
+    shot_status_changed = pyqtSignal(bool)
+
     def __init__(self, player_field: BattleField, enemy_filed):
+        super().__init__()
         self.my_shot = False
         self.last_hit_success = False
         self.enemy_queue = None
@@ -25,6 +29,7 @@ class Player:
         self.client.find_enemy()
         self.enemy_queue = self.client.response.get('enemy_queue')
         self.my_shot = self.client.response.get('first_hit')
+        self.shot_status_changed.emit(self.my_shot)
         # если первый ход не наш, то ждем первый выстрел от противника
         if not self.my_shot:
             self.client.wait_shot()
@@ -51,8 +56,10 @@ class Player:
         Отправляет информацию о попадании или промахе сопернику.
         :param x, y: координаты выстрела соперника
         """
+        # противник попал?
         is_hit = self.player_field.field[x][y] == BattleField.SHIP_CELL
         self.client.send_shot_status(is_hit)
+        self.shot_status_changed.emit(not is_hit)
         # если противник промахнулся, то ход переходит к нам
         if not is_hit:
             self.my_shot = not self.my_shot
@@ -60,8 +67,10 @@ class Player:
     def _on_shot_status(self, is_hit):
         """
         Вызывается при получении информации от соперника о промахе или попадании.
+        :param: is_hit - мы попали?
         """
         self.enemy_filed.change_field_after_shot(*self.last_shot, is_hit)
+        self.shot_status_changed.emit(is_hit)
         # если мы про махнулись, то мы не можем ходить, пока противник не промахнется
         if not is_hit:
             self.my_shot = not self.my_shot
