@@ -7,9 +7,10 @@ channel = connection.channel()
 # создаем очередь
 channel.queue_declare(queue='battle_ship_queue')
 
+# список подключенных игроков
 clients = []
 
-class Client:
+class ConnectedPlayer:
     def __init__(self, queue_name, corr_id):
         self.queue_name = queue_name
         self.enemy_queue_name = None
@@ -18,15 +19,17 @@ class Client:
     def set_enemy(self, enemy):
         self.enemy_queue_name = enemy.queue_name
 
+
 def on_request(ch, method, props, body):
     # переводим байты в словарь
     request = json.loads(body.decode("utf-8"))
     action = request.get('action')
     print(request)
+    # клиент запрашивает подбор противника
     if action == 'find_enemy':
-        client = Client(props.reply_to, props.correlation_id)
+        client = ConnectedPlayer(props.reply_to, props.correlation_id)
         clients.append(client)
-        # [print(c.queue_name) for c in clients]
+        # при каждом втором подключенном игроке объединяем 2 последних игрока в пару
         if len(clients) % 2 == 0:
             clients[-1].set_enemy(clients[-2])
             clients[-2].set_enemy(clients[-1])
@@ -51,18 +54,11 @@ def on_request(ch, method, props, body):
                                  properties=pika.BasicProperties(correlation_id=client.last_msg_corr_id),
                                  body=body)
 
-    # response = None
-
-    # ch.basic_publish(exchange='',
-    #                  routing_key=props.reply_to,
-    #                  properties=pika.BasicProperties(correlation_id=props.correlation_id),
-    #                  body=str(response))
-
     # подтверждение сообщений
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 channel.basic_consume(consumer_callback=on_request, queue='battle_ship_queue')
 
-print(" [x] Awaiting RPC requests")
+print("Сервер стартовал")
 channel.start_consuming()
