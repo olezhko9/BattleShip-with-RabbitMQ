@@ -3,7 +3,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 import sys
 from BattleField import BattleField
-from Player import Player
+from Player import ActivePlayer, BotPlayer
 
 
 class BattleShip(QMainWindow):
@@ -53,9 +53,10 @@ class BattleShip(QMainWindow):
         """
         Глаавный игровой цикл
         """
+
         self.game_over = False
 
-        self.player = Player(self.myBattleField, self.enemyBattleField)
+        self.player = BotPlayer(self.myBattleField, self.enemyBattleField)
         self.player.shot_status_changed.connect(self.on_shot_status_changed)
         self.start_button.clicked.connect(self.player.find_enemy)
 

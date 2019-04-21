@@ -2,15 +2,17 @@ from PyQt5.QtCore import pyqtSignal, QObject
 import pika
 import uuid
 import json
-import random
 
+from_me = "[ me -> enemy]"
+from_enemy = "[ enemy -> me]"
 
 class BattleShipClient(QObject):
     shot_status_signal = pyqtSignal(bool)
     make_shot_signal = pyqtSignal(int, int)
 
-    def __init__(self):
+    def __init__(self, player):
         super().__init__()
+        self.p = player
         # подключились к брокеру сообщений
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         self.channel = self.connection.channel()
@@ -28,17 +30,18 @@ class BattleShipClient(QObject):
         if self.corr_id == props.correlation_id:
             self.response = self._load_from_json(body)
             self.enemy_id = self.response.get('enemy_queue')
-            print('Ответ от сервера:', self.response)
+            # print('Ответ от сервера:', self.response)
         # сообщение от другого клиента
         else:
             # self.my_shot = not self.my_shot
             self.response = self._load_from_json(body)
-            print("Ответ от клиента:", self.response)
+            # print("Ответ от клиента:", self.response)
 
             # обрабатываем выстрел противника
             if self.response.get('action') == 'shot':
                 # отправляем результат
                 coord = self.response.get('hit')
+                print(from_enemy, "Противник выстрелил ", coord)
                 self.make_shot_signal.emit(*coord)
                 # делаем свой выстред
                 # self.send_shot()
@@ -47,13 +50,15 @@ class BattleShipClient(QObject):
             # узнаем рещультат выстрела
             elif self.response.get('action') == 'status':
                 shot_status = self.response.get('status')
+                print(from_enemy, "Статус последнего выстрела ", shot_status)
                 self.shot_status_signal.emit(shot_status)
-                if shot_status:
-                    print('Попал')
-                else:
-                    print('Мимо')
+                # if shot_status:
+                #     print('Попал')
+                # else:
+                #     print('Мимо')
 
     def _call(self, request, queue='battle_ship_queue'):
+        # print('Отправляю результат: ', request)
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(exchange='',
                                    routing_key=queue,
@@ -70,7 +75,7 @@ class BattleShipClient(QObject):
         return self.response
 
     def send_shot(self, x, y):
-        print('Стреляю по врагу')
+        print(from_me, "Стреляю по ", [x, y])
         shot = {
             'action': 'shot',
             'hit': [x, y],
@@ -79,7 +84,7 @@ class BattleShipClient(QObject):
         self.wait_shot()
 
     def send_shot_status(self, is_hit):
-        print('Отправляю результат')
+        print(from_me, "Статус выстрела противника: ", is_hit)
         status = {
             'action': 'status',
             'status': is_hit,
@@ -96,11 +101,9 @@ class BattleShipClient(QObject):
     def wait_shot(self):
         self.response = None
         while self.response is None:
-            print(self.response)
+            print(self.response, self.p.my_shot)
             self.connection.process_data_events(time_limit=2)
 
-    def get_random_coordinats(self):
-        return random.randint(0, 9), random.randint(0, 9)
 
     def _load_from_json(self, byte_json):
         return json.loads(byte_json.decode("utf-8"))
