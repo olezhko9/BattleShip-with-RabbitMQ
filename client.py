@@ -74,11 +74,11 @@ class BattleShipClient(QObject):
 
         return self.response
 
-    def send_shot(self, x, y):
-        print(from_me, "Стреляю по ", [x, y])
+    def send_shot(self, shot_coord):
+        print(from_me, "Стреляю по ", shot_coord)
         shot = {
             'action': 'shot',
-            'hit': [x, y],
+            'hit': shot_coord,
         }
         self._call(shot, self.enemy_id)
         self.wait_shot()
